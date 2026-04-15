@@ -1,92 +1,83 @@
 import requests
 from datetime import datetime
 
-def buscar_por_nome():
-    nome_jogo = input("\nDigite o nome do jogo: ")
-    url = "https://store.steampowered.com/api/storesearch/"
-    parametros = {'term': nome_jogo, 'l': 'portuguese', 'cc': 'BR'}
+def buscar_jogo_completo():
+    nome_input = input("\n Digite o nome do jogo: ")
+    
+    url_steam = "https://store.steampowered.com/api/storesearch/"
+    params_steam = {'term': nome_input, 'l': 'portuguese', 'cc': 'BR'}
     
     try:
-        res = requests.get(url, params=parametros).json()
-        if res.get('total', 0) > 0:
-            jogo = res['items'][0]
-            preco = f"R$ {jogo['price']['final']/100:.2f}" if 'price' in jogo else "Gratuito"
-            print(f"\n Encontrado: {jogo['name']} | Preço Atual: {preco}")
-        else:
-            print("\n Jogo não encontrado.")
-    except:
-        print("\n Erro ao acessar a Steam.")
-
-def ver_historico_preco():
-    nome_jogo = input("\nDigite o nome do jogo para ver o histórico: ")
-    
-    url_busca = "https://www.cheapshark.com/api/1.0/games"
-    params_busca = {'title': nome_jogo, 'limit': 1}
-    
-    try:
-        res_busca = requests.get(url_busca, params=params_busca).json()
+        res_steam = requests.get(url_steam, params=params_steam).json()
         
-        if not res_busca:
-            print(" Jogo não encontrado para histórico.")
+        if not res_steam.get('items'):
+            print(f" Jogo '{nome_input}' não encontrado na Steam.")
             return
 
-        game_id = res_busca[0]['gameID']
-        nome_correto = res_busca[0]['external']
-
-        url_detalhes = f"https://www.cheapshark.com/api/1.0/games?id={game_id}"
-        res_detalhes = requests.get(url_detalhes).json()
-
-        melhor_preco = res_detalhes['cheapestPriceEver']['price']
-        data_timestamp = res_detalhes['cheapestPriceEver']['date']
+        dados_steam = res_steam['items'][0]
+        nome_oficial = dados_steam['name']
+        preco_atual = "Gratuito"
         
-        data_formatada = datetime.fromtimestamp(data_timestamp).strftime('%d/%m/%Y')
+        if 'price' in dados_steam:
+            preco_atual = f"R$ {dados_steam['price']['final']/100:.2f}".replace('.', ',')
 
-        print("-" * 40)
-        print(f" HISTÓRICO DE: {nome_correto.upper()}")
-        print(f" Menor preço já registrado: $ {melhor_preco}")
-        print(f" Data do recorde: {data_formatada}")
-        print(f" Dica: Se o preço atual for próximo de ${melhor_preco}, compre!")
-        print("-" * 40)
+        url_cs_busca = "https://www.cheapshark.com/api/1.0/games"
+        res_cs_id = requests.get(url_cs_busca, params={'title': nome_oficial, 'limit': 1}).json()
+
+        historico_info = "Histórico não disponível"
+        
+        if res_cs_id:
+            game_id = res_cs_id[0]['gameID']
+            url_cs_detalhes = f"https://www.cheapshark.com/api/1.0/games?id={game_id}"
+            detalhes = requests.get(url_cs_detalhes).json()
+            
+            menor_preco = detalhes['cheapestPriceEver']['price']
+            data_ts = detalhes['cheapestPriceEver']['date']
+            data_pt = datetime.fromtimestamp(data_ts).strftime('%d/%m/%Y')
+            historico_info = f"$ {menor_preco} (em {data_pt})"
+
+        print("\n" + "—" * 45)
+        print(f" JOGO: {nome_oficial.upper()}")
+        print(f" Preço Atual: {preco_atual}")
+        print(f" Menor preço histórico: {historico_info}")
+        print("—" * 45)
+        if "Gratuito" not in preco_atual:
+            print(" Dica: O histórico é baseado no valor global (USD).")
 
     except Exception as e:
-        print(f" Erro ao buscar histórico: {e}")
+        print(f" Erro ao processar busca: {e}")
 
-def listar_grandes_descontos():
-    print("\n Buscando jogos com +80% de desconto...")
+def listar_promocoes_80():
+    print("\n Buscando jogos com 80% ou mais de desconto...")
     url = "https://www.cheapshark.com/api/1.0/deals"
-    parametros = {'storeID': 1, 'onSale': 1, 'pageSize': 15}
+    params = {'storeID': 1, 'onSale': 1, 'pageSize': 15}
     
     try:
-        res = requests.get(url, params=parametros).json()
-        print(f"{'JOGO':<40} | {'DESC.':<6} | {'PREÇO':<10}")
-        print("-" * 62)
+        res = requests.get(url, params=params).json()
+        print(f"\n{'JOGO':<35} | {'DESC.':<6} | {'PREÇO (USD)':<10}")
+        print("-" * 55)
         for item in res:
-            desconto = float(item['savings'])
-            if desconto >= 80:
-                print(f"{item['title'][:38]:<40} | {desconto:>5.0f}% | $ {item['salePrice']:<10}")
+            desc = float(item['savings'])
+            if desc >= 80:
+                print(f"{item['title'][:33]:<35} | {desc:>5.0f}% | $ {item['salePrice']:<10}")
     except:
-        print("\n Erro ao carregar promoções.")
+        print(" Erro ao listar promoções.")
 
-# --- Menu Principal ---
+# --- MENU PRINCIPAL ---
 while True:
-    print("\n" + "="*30)
-    print("      STEAM HELPER")
-    print("="*30)
-    print("1. Buscar jogo por nome")
-    print("2. Ver jogos com +80% de desconto")
-    print("3. Ver Menor Preço Histórico (All-time Low)")
-    print("4. Sair")
+    print("\n--- STEAM TRACKER ---")
+    print("1. Buscar Jogo (Preço + Histórico)")
+    print("2. Ver Ofertas (+80% OFF)")
+    print("3. Sair")
     
-    opcao = input("\nEscolha uma opção: ")
+    escolha = input("\nEscolha uma opção: ")
     
-    if opcao == '1':
-        buscar_por_nome()
-    elif opcao == '2':
-        listar_grandes_descontos()
-    elif opcao == '3':
-        ver_historico_preco()
-    elif opcao == '4':
-        print("Saindo... Economize bastante!")
+    if escolha == '1':
+        buscar_jogo_completo()
+    elif escolha == '2':
+        listar_promocoes_80()
+    elif escolha == '3':
+        print("Até a próxima! Boas compras.")
         break
     else:
-        print("\n Opção inválida!")
+        print("Opção inválida.")
