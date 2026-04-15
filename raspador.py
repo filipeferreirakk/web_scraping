@@ -1,52 +1,68 @@
 import requests
 
-def buscar_preco_steam(nome_jogo):
+def buscar_por_nome():
+    nome_jogo = input("\nDigite o nome do jogo: ")
     url = "https://store.steampowered.com/api/storesearch/"
+    parametros = {'term': nome_jogo, 'l': 'portuguese', 'cc': 'BR'}
+    
+    try:
+        res = requests.get(url, params=parametros).json()
+        if res.get('total', 0) > 0:
+            jogo = res['items'][0]
+            preco = f"R$ {jogo['price']['final']/100:.2f}" if 'price' in jogo else "Gratuito"
+            print(f"\n Encontrado: {jogo['name']} | Preço: {preco}")
+        else:
+            print("\n Jogo não encontrado.")
+    except:
+        print("\n Erro ao acessar a Steam.")
+
+def listar_grandes_descontos():
+    print("\n🔍 Buscando jogos com 80% ou mais de desconto na Steam...")
+    url = "https://www.cheapshark.com/api/1.0/deals"
     parametros = {
-        'term': nome_jogo,
-        'l': 'portuguese',
-        'cc': 'BR'
+        'storeID': 1,          
+        'upperPrice': 50,    
+        'onSale': 1,
+        'pageSize': 15       
     }
     
     try:
-        resposta = requests.get(url, params=parametros)
-        resposta.raise_for_status()
-        dados = resposta.json()
+        res = requests.get(url, params=parametros).json()
+        encontrou = False
         
-        if dados.get('total', 0) > 0:
-            jogo = dados['items'][0]
-            nome_oficial = jogo.get('name')
-            
-            if 'price' in jogo:
-                preco_real = jogo['price']['final'] / 100
-                preco_formatado = f"R$ {preco_real:.2f}".replace('.', ',')
-            else:
-                preco_formatado = "Gratuito ou Indisponível"
-                
-            return nome_oficial, preco_formatado
-        else:
-            return None, "Jogo não encontrado."
+        print(f"{'JOGO':<40} | {'DESC.':<6} | {'PREÇO':<10}")
+        print("-" * 62)
+        
+        for item in res:
+            desconto = float(item['savings'])
+            if desconto >= 80:
+                nome = item['title'][:38]
+                preco = f"R$ {float(item['salePrice']):.2f}"
+                print(f"{nome:<40} | {desconto:>5.0f}% | {preco:<10}")
+                encontrou = True
+        
+        if not encontrou:
+            print("Nenhum jogo com mais de 80% de desconto no momento.")
             
     except Exception as e:
-        return None, f"Erro na busca: {e}"
-
-
-print("=== BUSCADOR DE PREÇOS STEAM ===")
-print("Digite 'sair' para encerrar o programa.\n")
+        print(f"\n Erro ao carregar promoções: {e}")
 
 while True:
-    busca_usuario = input("Digite o nome do jogo: ")
-
-    if busca_usuario.lower() in ['sair', 'exit', 'quit', 's']:
-        print("Encerrando... Até a próxima!")
+    print("\n" + "="*30)
+    print("      MENU STEAM")
+    print("="*30)
+    print("1. Buscar jogo por nome")
+    print("2. Ver jogos com +80% de desconto")
+    print("3. Sair")
+    
+    opcao = input("\nEscolha uma opção: ")
+    
+    if opcao == '1':
+        buscar_por_nome()
+    elif opcao == '2':
+        listar_grandes_descontos()
+    elif opcao == '3':
+        print("Saindo... Até logo!")
         break
-
-    nome, preco = buscar_preco_steam(busca_usuario)
-
-    print("-" * 30)
-    if nome:
-        print(f"Jogo:  {nome}")
-        print(f"Preço: {preco}")
     else:
-        print(f"{preco}")
-    print("-" * 30 + "\n")
+        print("\n Opção inválida! Tente 1, 2 ou 3.")
