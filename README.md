@@ -18,9 +18,7 @@ Para rodar este projeto, você vai precisar do Python instalado no seu sistema e
 2. Instale a dependência necessária rodando o comando abaixo no seu terminal:
    pip install requests
 3. Execute o script:
-   python nome_do_arquivo.py
-
-*(Lembre-se de substituir `nome_do_arquivo.py` pelo nome real do arquivo salvo)*
+   python raspador.py
 
 ## APIs Utilizadas
 
