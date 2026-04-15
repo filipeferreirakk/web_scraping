@@ -47,7 +47,7 @@ def buscar_jogo_completo():
             
             menor_preco_convertido = menor_preco_usd * cotacao
             
-            historico_info = (f"$ {menor_preco_convertido:.2f} "
+            historico_info = (f"R$ {menor_preco_convertido:.2f} "
                               f"em {data_pt}")
 
         print("\n" + "—" * 60)
@@ -62,7 +62,7 @@ def buscar_jogo_completo():
 
 def listar_promocoes_80():
     cotacao = obter_cotacao_dolar()
-    print(f"\n Buscando jogos com +80% OFF (Dólar hoje: R$ {cotacao:.2f})")
+    print(f"\n Buscando jogos com +80% OFF")
     url = "https://www.cheapshark.com/api/1.0/deals"
     params = {'storeID': 1, 'onSale': 1, 'pageSize': 15}
     
