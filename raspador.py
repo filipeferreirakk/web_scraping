@@ -37,7 +37,7 @@ def buscar_jogo_completo():
             detalhes = requests.get(f"https://www.cheapshark.com/api/1.0/games?id={game_id}").json()
             menor_usd = float(detalhes['cheapestPriceEver']['price'])
             data_pt = datetime.fromtimestamp(detalhes['cheapestPriceEver']['date']).strftime('%d/%m/%Y')
-            historico_info = f"$ {menor_usd:.2f} (Aprox. R$ {menor_usd * cotacao:.2f}) em {data_pt}"
+            historico_info = f"R$ {menor_usd * cotacao:.2f} em {data_pt}"
 
         print("\n" + "—" * 65)
         print(f" JOGO: {nome_oficial.upper()}")
@@ -97,7 +97,7 @@ def listar_promocoes_80():
 
 while True:
     print("\n" + "="*25)
-    print("   STEAM TRACKER PRO")
+    print("SISTEMA DE RASPAGEM STEAM")
     print("="*25)
     print("1. Buscar Jogo (Preço + Histórico)")
     print("2. Ver Ofertas (+80% OFF)")
